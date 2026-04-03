@@ -1,0 +1,40 @@
+from PIL import Image
+import struct
+
+def encode_file(image_path, file_path, output_path):
+    img = Image.open(image_path)
+    encoded = img.copy()
+    width, height = img.size
+
+    # baca file word
+    with open(file_path, 'rb') as f:
+        file_data = f.read()
+
+    file_size = len(file_data)
+
+    # header ukuran file (4 byte)
+    header = struct.pack('I', file_size)
+    data = header + file_data
+
+    binary_data = ''.join(format(byte, '08b') for byte in data)
+
+    data_index = 0
+    total_bits = len(binary_data)
+
+    for y in range(height):
+        for x in range(width):
+            pixel = list(img.getpixel((x, y)))
+
+            for n in range(3):
+                if data_index < total_bits:
+                    pixel[n] = pixel[n] & ~1 | int(binary_data[data_index])
+                    data_index += 1
+
+            encoded.putpixel((x, y), tuple(pixel))
+
+            if data_index >= total_bits:
+                encoded.save(output_path)
+                print("✅ File berhasil disembunyikan!")
+                return
+
+    print("❌ Gambar tidak cukup besar untuk menyimpan file!")

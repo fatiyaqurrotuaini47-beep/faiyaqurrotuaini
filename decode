@@ -1,0 +1,26 @@
+from PIL import Image
+
+def decode_file(stego_image, output_file):
+    img = Image.open(stego_image)
+    width, height = img.size
+
+    binary_data = ""
+
+    for y in range(height):
+        for x in range(width):
+            pixel = img.getpixel((x, y))
+            for n in range(3):
+                binary_data += str(pixel[n] & 1)
+
+    file_size = int(binary_data[:32], 2)
+
+    file_bits = binary_data[32:32 + (file_size * 8)]
+
+    file_bytes = bytearray()
+    for i in range(0, len(file_bits), 8):
+        file_bytes.append(int(file_bits[i:i+8], 2))
+
+    with open(output_file, 'wb') as f:
+        f.write(file_bytes)
+
+    print("✅ File berhasil diekstrak!")
